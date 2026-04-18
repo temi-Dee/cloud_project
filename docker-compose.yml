@@ -1,19 +1,36 @@
 version: "3.9"
 
 services:
-  # ── Tier 1: Frontend ─────────────────────────────────────────
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: ../docker/Dockerfile.frontend
+  # ── Tier 3: Local DynamoDB ────────────────────────────────────
+  dynamodb:
+    image: amazon/dynamodb-local:latest
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:3000
-    volumes:
-      - ./frontend/src:/app/src
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Auto-create DynamoDB table on startup ─────────────────────
+  dynamodb-setup:
+    image: amazon/aws-cli:latest
     depends_on:
-      - backend
+      dynamodb:
+        condition: service_healthy
+    environment:
+      - AWS_ACCESS_KEY_ID=local
+      - AWS_SECRET_ACCESS_KEY=local
+      - AWS_DEFAULT_REGION=eu-west-1
+    entrypoint: >
+      aws dynamodb create-table
+      --table-name nysc-registrations
+      --attribute-definitions AttributeName=pk,AttributeType=S AttributeName=sk,AttributeType=S AttributeName=registrationId,AttributeType=S
+      --key-schema AttributeName=pk,KeyType=HASH AttributeName=sk,KeyType=RANGE
+      --global-secondary-indexes "[{\"IndexName\":\"registrationId-index\",\"KeySchema\":[{\"AttributeName\":\"registrationId\",\"KeyType\":\"HASH\"}],\"Projection\":{\"ProjectionType\":\"ALL\"},\"ProvisionedThroughput\":{\"ReadCapacityUnits\":5,\"WriteCapacityUnits\":5}}]"
+      --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
+      --endpoint-url http://dynamodb:8000
 
   # ── Tier 2: Backend ───────────────────────────────────────────
   backend:
@@ -32,21 +49,33 @@ services:
       - AWS_SECRET_ACCESS_KEY=local
       - DYNAMODB_ENDPOINT=http://dynamodb:8000
     depends_on:
-      - dynamodb
+      dynamodb:
+        condition: service_healthy
 
-  # ── Tier 3: Database (local DynamoDB) ─────────────────────────
-  dynamodb:
-    image: amazon/dynamodb-local:latest
+  # ── Tier 1: Frontend ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
     ports:
-      - "8000:8000"
-    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    volumes:
+      - ./frontend/src:/app/src
+    depends_on:
+      - backend
 
-  # ── DynamoDB Admin UI (optional) ─────────────────────────────
+  # ── DynamoDB Admin UI ─────────────────────────────────────────
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin
     ports:
       - "8001:8001"
     environment:
       - DYNAMO_ENDPOINT=http://dynamodb:8000
+      - AWS_ACCESS_KEY_ID=local
+      - AWS_SECRET_ACCESS_KEY=local
+      - AWS_REGION=eu-west-1
     depends_on:
-      - dynamodb
+      dynamodb:
+        condition: service_healthy
