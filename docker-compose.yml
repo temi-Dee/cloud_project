@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  # ── Tier 1: Frontend ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    volumes:
+      - ./frontend/src:/app/src
+    depends_on:
+      - backend
+
+  # ── Tier 2: Backend ───────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    ports:
+      - "3000:3000"
+    environment:
+      - AWS_REGION=eu-west-1
+      - REGISTRATIONS_TABLE=nysc-registrations
+      - BIOMETRICS_BUCKET=nysc-biometrics-local
+      - FRONTEND_URL=http://localhost:5173
+      - FROM_EMAIL=noreply@nysc.gov.ng
+      - AWS_ACCESS_KEY_ID=local
+      - AWS_SECRET_ACCESS_KEY=local
+      - DYNAMODB_ENDPOINT=http://dynamodb:8000
+    depends_on:
+      - dynamodb
+
+  # ── Tier 3: Database (local DynamoDB) ─────────────────────────
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+
+  # ── DynamoDB Admin UI (optional) ─────────────────────────────
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin
+    ports:
+      - "8001:8001"
+    environment:
+      - DYNAMO_ENDPOINT=http://dynamodb:8000
+    depends_on:
+      - dynamodb
