@@ -496,13 +496,53 @@ export default function NYSCRegistration() {
 
 /* ── Sub-components ────────────────────────────────────────── */
 
+function NYSCLogo() {
+  return (
+    <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Shield background */}
+      <path d="M27 2 L50 10 L50 30 Q50 44 27 52 Q4 44 4 30 L4 10 Z" fill="#008751" />
+      <path d="M27 6 L46 13 L46 30 Q46 42 27 49 Q8 42 8 30 L8 13 Z" fill="#005c36" />
+
+      {/* Torch flame */}
+      <ellipse cx="27" cy="14" rx="4" ry="5" fill="#FFD700" />
+      <ellipse cx="27" cy="13" rx="2.5" ry="3.5" fill="#FFA500" />
+      <ellipse cx="27" cy="12" rx="1.5" ry="2" fill="#fff" opacity="0.8" />
+
+      {/* Torch handle */}
+      <rect x="25" y="18" width="4" height="10" rx="1.5" fill="#FFD700" />
+      <rect x="25.5" y="18" width="3" height="10" rx="1" fill="#FFC200" />
+
+      {/* Torch base */}
+      <rect x="23.5" y="27" width="7" height="2.5" rx="1" fill="#FFD700" />
+
+      {/* Eagle wings left */}
+      <path d="M24 22 Q16 18 10 22 Q14 24 18 23 Q20 25 22 24 Z" fill="#FFD700" />
+      {/* Eagle wings right */}
+      <path d="M30 22 Q38 18 44 22 Q40 24 36 23 Q34 25 32 24 Z" fill="#FFD700" />
+
+      {/* Eagle head */}
+      <circle cx="27" cy="20" r="3" fill="#FFD700" />
+      <circle cx="28.2" cy="19.2" r="0.8" fill="#005c36" />
+      <path d="M29 20.5 L31 21 L29.5 21.5 Z" fill="#FFA500" />
+
+      {/* Stars */}
+      <text x="13" y="38" fontSize="5" fill="#FFD700" textAnchor="middle">★</text>
+      <text x="27" y="40" fontSize="5" fill="#FFD700" textAnchor="middle">★</text>
+      <text x="41" y="38" fontSize="5" fill="#FFD700" textAnchor="middle">★</text>
+
+      {/* Bottom text band */}
+      <path d="M10 42 Q27 50 44 42" stroke="#FFD700" strokeWidth="1" fill="none" />
+    </svg>
+  );
+}
+
 function Header() {
   return (
     <header style={styles.header}>
       <div style={styles.headerInner}>
         <div style={styles.logo}>
           <div style={styles.logoShield}>
-            <span style={{ fontSize: 22 }}>🦅</span>
+            <NYSCLogo />
           </div>
           <div>
             <div style={styles.logoTitle}>NYSC</div>
@@ -642,7 +682,7 @@ const styles = {
   headerInner: { maxWidth: 860, margin: "0 auto", padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
   headerStripe: { height: 4, background: "linear-gradient(90deg, #008751 0%, #008751 33%, #fff 33%, #fff 66%, #00c47a 66%)" },
   logo: { display: "flex", alignItems: "center", gap: 12 },
-  logoShield: { width: 48, height: 48, background: "linear-gradient(135deg, #008751, #005c36)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,135,81,0.3)" },
+  logoShield: { width: 54, height: 54, display: "flex", alignItems: "center", justifyContent: "center" },
   logoTitle: { fontWeight: 900, fontSize: 22, color: "#008751", letterSpacing: 2 },
   logoSub: { fontSize: 11, color: "#6b7280", fontWeight: 500, letterSpacing: 0.5 },
   headerRight: { textAlign: "right" },
